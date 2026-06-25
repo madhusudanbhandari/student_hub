@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:my_app/Screens/Home.dart';
 import 'screens/Login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,11 +18,13 @@ class StudentHub extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final session = Supabase.instance.client.auth.currentSession;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: "Student Hub",
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const LoginScreen(),
+      home: session != null ? const HomeScreen() : const LoginScreen(),
     );
   }
 }

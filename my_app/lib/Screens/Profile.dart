@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 
-class Profile extends StatelessWidget {
-  const Profile({super.key});
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Scaffold(
+      appBar: AppBar(title: const Text("Profile")),
+      body: const Center(
+        child: CircleAvatar(radius: 60, child: Icon(Icons.person, size: 60)),
+      ),
+    );
   }
 }

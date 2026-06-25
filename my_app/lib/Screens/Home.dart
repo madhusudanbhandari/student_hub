@@ -1,5 +1,6 @@
 // Student@hub123.
-
+import 'package:my_app/screens/Login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'Notes.dart';
 import 'Tasks.dart';
@@ -49,11 +50,24 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const Profile()),
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   );
                 },
                 child: const Text("Profile"),
               ),
+            ),
+            SizedBox(height: 15),
+            ElevatedButton(
+              onPressed: () async {
+                await Supabase.instance.client.auth.signOut();
+
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              },
+              child: const Text("Logout"),
             ),
           ],
         ),
