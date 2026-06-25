@@ -36,7 +36,7 @@ class HomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const Tasks()),
+                    MaterialPageRoute(builder: (_) => const TasksScreen()),
                   );
                 },
                 child: const Text("Tasks"),

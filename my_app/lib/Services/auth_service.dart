@@ -14,7 +14,10 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    return await supabase.auth.signUp(email: email, password: password);
+    return await supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
   }
 
   Future<void> signOut() async {
