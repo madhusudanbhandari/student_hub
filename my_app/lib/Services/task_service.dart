@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class TaskService {
@@ -30,14 +28,14 @@ class TaskService {
     return List<Map<String, dynamic>>.from(respose);
   }
 
-  Future<void> deleteTask(String id) async {
+  Future<void> deleteTask(int id) async {
     await supabase.from('tasks').delete().eq('id', id);
   }
 
-  Future<void> toggleTask(String id, bool completed) async {
+  Future<void> toggleTask(int id, bool currentValue) async {
     await supabase
         .from('tasks')
-        .update({"is_completed": completed})
+        .update({"completed": !currentValue})
         .eq('id', id);
   }
 }
