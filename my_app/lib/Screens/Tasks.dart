@@ -21,6 +21,13 @@ class _TasksScreenState extends State<TasksScreen> {
     getTask();
   }
 
+  @override
+  void dispose() {
+    titleController.dispose();
+    descController.dispose();
+    super.dispose();
+  }
+
   Future<void> addTask() async {
     try {
       setState(() => isLoading = true);
@@ -28,14 +35,15 @@ class _TasksScreenState extends State<TasksScreen> {
         title: titleController.text.trim(),
         description: descController.text.trim(),
       );
-      if (!mounted) return;
       titleController.clear();
       descController.clear();
       await getTask();
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text("Task added")));
     } catch (err) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(err.toString())));
@@ -46,12 +54,17 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Future<void> getTask() async {
     final response = await taskService.getTasks();
+    response.sort((a, b) {
+      if (a['completed'] == b['completed']) return 0;
+      return a['completed'] ? 1 : -1;
+    });
     setState(() => tasks = response);
   }
 
   Widget _styledField({
     required TextEditingController controller,
     required String label,
+    required IconData icon,
     int maxLines = 1,
   }) {
     return TextField(
@@ -61,8 +74,9 @@ class _TasksScreenState extends State<TasksScreen> {
       decoration: InputDecoration(
         labelText: label,
         labelStyle: const TextStyle(color: Color(0xFF64748B)),
+        prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 20),
         filled: true,
-        fillColor: const Color(0xFF0F172A),
+        fillColor: const Color(0xFF1E293B),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFF334155)),
@@ -81,7 +95,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final completed = tasks.where((t) => t['is_completed'] == true).length;
+    final completed = tasks.where((task) => task['completed'] == true).length;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -104,6 +118,7 @@ class _TasksScreenState extends State<TasksScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
+        centerTitle: false,
       ),
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -146,14 +161,20 @@ class _TasksScreenState extends State<TasksScreen> {
             ],
 
             // Input fields
-            _styledField(controller: titleController, label: 'Title'),
+            _styledField(
+              controller: titleController,
+              label: 'Title',
+              icon: Icons.title_rounded,
+            ),
             const SizedBox(height: 12),
             _styledField(
               controller: descController,
               label: 'Description',
+              icon: Icons.notes_rounded,
               maxLines: 2,
             ),
             const SizedBox(height: 16),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -190,7 +211,7 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
             const SizedBox(height: 24),
 
-            // Task count label
+            // Task count
             Text(
               '${tasks.length} task${tasks.length == 1 ? '' : 's'}',
               style: const TextStyle(color: Color(0xFF64748B), fontSize: 13),
@@ -224,8 +245,8 @@ class _TasksScreenState extends State<TasksScreen> {
                       itemCount: tasks.length,
                       separatorBuilder: (_, __) => const SizedBox(height: 10),
                       itemBuilder: (_, index) {
-                        final isCompleted =
-                            tasks[index]['is_completed'] ?? false;
+                        final isCompleted = tasks[index]['completed'] ?? false;
+
                         return Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF1E293B),
@@ -245,9 +266,12 @@ class _TasksScreenState extends State<TasksScreen> {
                               Checkbox(
                                 value: isCompleted,
                                 onChanged: (value) async {
+                                  setState(() {
+                                    tasks[index]['completed'] = value;
+                                  });
                                   await taskService.toggleTask(
                                     tasks[index]['id'],
-                                    tasks[index]['is_completed'] ?? false,
+                                    value!,
                                   );
                                   await getTask();
                                 },
@@ -281,36 +305,58 @@ class _TasksScreenState extends State<TasksScreen> {
                                         ),
                                       ),
                                     ),
-                                    if ((tasks[index]['description'] ?? '')
-                                        .isNotEmpty) ...[
-                                      const SizedBox(height: 3),
+                                    const SizedBox(height: 3),
+                                    if (isCompleted)
+                                      const Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle_rounded,
+                                            color: Color(0xFF34D399),
+                                            size: 14,
+                                          ),
+                                          SizedBox(width: 4),
+                                          Text(
+                                            'Completed',
+                                            style: TextStyle(
+                                              color: Color(0xFF34D399),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      )
+                                    else if ((tasks[index]['description'] ?? '')
+                                        .isNotEmpty)
                                       Text(
                                         tasks[index]['description'],
-                                        style: TextStyle(
-                                          color: isCompleted
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFF94A3B8),
+                                        style: const TextStyle(
+                                          color: Color(0xFF94A3B8),
                                           fontSize: 13,
                                         ),
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                       ),
-                                    ],
                                   ],
                                 ),
                               ),
                               IconButton(
-                                onPressed: () async {
-                                  await taskService.deleteTask(
-                                    tasks[index]['id'],
-                                  );
-                                  await getTask();
-                                },
                                 icon: const Icon(
                                   Icons.delete_outline_rounded,
                                   color: Color(0xFFFF6B6B),
                                   size: 20,
                                 ),
+                                onPressed: () async {
+                                  await taskService.deleteTask(
+                                    tasks[index]['id'],
+                                  );
+                                  await getTask();
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text("Task deleted"),
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),

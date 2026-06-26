@@ -32,10 +32,7 @@ class TaskService {
     await supabase.from('tasks').delete().eq('id', id);
   }
 
-  Future<void> toggleTask(int id, bool currentValue) async {
-    await supabase
-        .from('tasks')
-        .update({"completed": !currentValue})
-        .eq('id', id);
+  Future<void> toggleTask(int id, bool completed) async {
+    await supabase.from('tasks').update({"completed": completed}).eq('id', id);
   }
 }

@@ -13,7 +13,6 @@ class _NotesState extends State<Notes> {
   final contentController = TextEditingController();
   bool isLoading = false;
   final noteService = NoteService();
-  List<Map<String, dynamic>> notes = [];
 
   @override
   void initState() {
@@ -43,6 +42,8 @@ class _NotesState extends State<Notes> {
       if (mounted) setState(() => isLoading = false);
     }
   }
+
+  List<Map<String, dynamic>> notes = [];
 
   Future<void> getNotes() async {
     final response = await noteService.getNotes();
