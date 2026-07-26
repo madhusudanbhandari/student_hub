@@ -26,4 +26,24 @@ class TodoService {
 
     return response.map((todo) => Todo.fromJson(todo)).toList();
   }
+
+  Future<void> updateTodos(
+    String id,
+    String title,
+    String description,
+    String deadline,
+  ) async {
+    await supabase
+        .from('todos')
+        .update({
+          'title': title,
+          'description': description,
+          'deadline': deadline,
+        })
+        .eq('id', id);
+  }
+
+  Future<void> deleteTodos(String id) async {
+    await supabase.from('todos').delete().eq('id', id);
+  }
 }

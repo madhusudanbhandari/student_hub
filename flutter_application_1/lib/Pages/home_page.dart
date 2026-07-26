@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/Models/todo_model.dart';
+import 'package:flutter_application_1/Pages/add_profile.dart';
 import 'package:flutter_application_1/Pages/add_todo.dart';
+import 'package:flutter_application_1/Pages/edit_todo.dart';
 import 'package:flutter_application_1/Pages/profile_page.dart';
+import 'package:flutter_application_1/Providers/todo_provider.dart';
 import 'package:flutter_application_1/Services/todo_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -20,6 +24,41 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text('Welcome'), centerTitle: true),
+
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: const Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Add'),
+              onTap: () {
+                Navigator.pop(context);
+                setState(() {
+                  selectedIndex = 1;
+                });
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.person),
+              title: Text('Add details'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AddProfile()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
       body: pages[selectedIndex],
 
       bottomNavigationBar: BottomNavigationBar(
@@ -38,16 +77,14 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final TodoService todoService = TodoService();
-
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   List<Todo> todos = [];
 
   @override
@@ -57,10 +94,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> fetchTodos() async {
+    final todoService = ref.read(todoServiceProvider);
     todos = await todoService.getTodos();
-
-    print(todos.length);
-    print(todos);
 
     setState(() {});
   }
@@ -70,7 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Your Todos',
+          'Your Todos are here',
           style: TextStyle(fontSize: 20, color: Colors.blue),
         ),
       ),
@@ -86,6 +121,40 @@ class _HomeScreenState extends State<HomeScreen> {
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [Text(todo.description), Text(todo.deadline)],
+              ),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    onPressed: () async {
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => EditTodo(todo: todo),
+                        ),
+                      );
+                      fetchTodos();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Edit'),
+                  ),
+                  SizedBox(width: 5),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final todoService = ref.read(todoServiceProvider);
+                      await todoService.deleteTodos(todo.id);
+                      fetchTodos();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text('Delete'),
+                  ),
+                ],
               ),
             ),
           );

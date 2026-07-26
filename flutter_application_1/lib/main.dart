@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'Pages/login_page.dart';
 
@@ -9,7 +10,7 @@ Future<void> main() async {
     url: 'https://itnxkpfikqxpjlvcppyg.supabase.co',
     publishableKey: 'sb_publishable_gI6DXTEZUQEsRFu-Vk0qcQ_Hae0SYNq',
   );
-  runApp(MyApp());
+  runApp(ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
